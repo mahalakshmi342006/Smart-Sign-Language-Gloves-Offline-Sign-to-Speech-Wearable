@@ -1,0 +1,30 @@
+### 🔧 Components Used
+
+| No. | Component                           | Purpose                                                      |
+| --- | ----------------------------------- | ------------------------------------------------------------ |
+| 1   | **ESP32-C3 Microcontroller**        | Main controller, edge processing, and local Wi-Fi/web server |
+| 2   | **TTP223 Capacitive Touch Sensors** | Detect finger/touch input for the 5-bit sign pattern         |
+| 3   | **MPU6050**                         | Detects hand movement and provides motion tracking           |
+| 4   | **Smart Glove**                     | Wearable platform for mounting the sensors                   |
+| 5   | **Power Management Unit**           | Provides power to the wearable system                        |
+
+The project document specifically lists **TTP223 capacitive touch, MPU6050 motion tracking, ESP32-C3, and power management** as the multi-sensor wearable hardware suite. 
+
+### 💻 Software/Technology Components
+
+For your GitHub README, you can also list:
+
+* **Embedded C/C++**
+* **HTML**
+* **CSS**
+* **JavaScript**
+* **WebSockets**
+* **Three.js**
+* **Local Web Server**
+* **Text-to-Speech (TTS)**
+* **Edge Computing**
+* **Sensor Fusion**
+
+The document also specifies **Three.js rendering, live telemetry, dynamic lip-sync, asynchronous WebSockets, and native TTS audio**. 
+
+**Important:** I would not add components such as flex sensors, batteries, OLED displays, or specific resistors to the GitHub README unless they are actually part of your built prototype—the uploaded document does not explicitly list them.
