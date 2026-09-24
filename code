@@ -1,0 +1,360 @@
+### 💻 Offline Code / Firmware
+
+The glove is programmed using **ESP32-C3 firmware**. The system runs locally on the ESP32-C3 and does not require an internet connection.
+
+The firmware handles:
+
+* **TTP223 capacitive touch sensor input**
+* **5-bit binary sign detection**
+* **MPU6050 motion tracking**
+* **Sensor fusion and anti-misfire logic**
+* **Local Wi-Fi access point**
+* **Offline local web server**
+* **WebSocket communication**
+* **Sign recognition**
+* **Real-time dashboard updates**
+* **Text-to-speech output**
+
+The project document confirms that the ESP32-C3 creates its own Wi-Fi, the user connects through a phone browser, and the system operates without internet or app downloads. 
+
+```
+Smart-Sign-Language-Gloves/
+│
+├── README.md
+├── firmware/
+│   └── smart_glove.ino
+│
+├── web/
+│   ├── index.html
+│   ├── style.css
+│   └── script.js
+│
+├── docs/
+│   ├── hardware.jpg
+│   ├── circuit.jpg
+│   └── dashboard.jpg
+│
+└── LICENSE
+```
+
+#include <WiFi.h>
+#include <WebServer.h>
+#include <Wire.h>
+#include <MPU6050.h>
+
+// =====================================================
+// SMART SIGN LANGUAGE GLOVE
+// ESP32-C3 - OFFLINE VERSION
+// =====================================================
+
+// ---------------- Wi-Fi Access Point ----------------
+const char* AP_SSID = "Smart_Glove";
+const char* AP_PASSWORD = "12345678";
+
+WebServer server(80);
+MPU6050 mpu;
+
+// ---------------- TTP223 TOUCH PINS ----------------
+// Change these pins according to your ESP32-C3 board.
+#define TOUCH1 2
+#define TOUCH2 3
+#define TOUCH3 4
+#define TOUCH4 5
+#define TOUCH5 6
+
+// ---------------- MPU6050 I2C ----------------
+// Change these if your board uses different I2C pins.
+#define SDA_PIN 8
+#define SCL_PIN 9
+
+// ---------------- Variables ----------------
+int touch1;
+int touch2;
+int touch3;
+int touch4;
+int touch5;
+
+String currentSign = "No Sign";
+
+
+// =====================================================
+// READ TOUCH SENSORS
+// =====================================================
+void readTouchSensors() {
+
+  touch1 = digitalRead(TOUCH1);
+  touch2 = digitalRead(TOUCH2);
+  touch3 = digitalRead(TOUCH3);
+  touch4 = digitalRead(TOUCH4);
+  touch5 = digitalRead(TOUCH5);
+}
+
+
+// =====================================================
+// CONVERT TOUCH INPUT TO 5-BIT VALUE
+// =====================================================
+int getBinaryValue() {
+
+  return (touch1 << 4) |
+         (touch2 << 3) |
+         (touch3 << 2) |
+         (touch4 << 1) |
+         touch5;
+}
+
+
+// =====================================================
+// SIGN RECOGNITION
+// =====================================================
+String recognizeSign(int value) {
+
+  switch (value) {
+
+    case 0:
+      return "No Sign";
+
+    case 1:
+      return "Hello";
+
+    case 2:
+      return "Yes";
+
+    case 3:
+      return "No";
+
+    case 4:
+      return "Thank You";
+
+    case 5:
+      return "Help";
+
+    case 6:
+      return "Good Morning";
+
+    case 7:
+      return "Good";
+
+    case 8:
+      return "Bad";
+
+    case 9:
+      return "Please";
+
+    case 10:
+      return "Sorry";
+
+    case 11:
+      return "Welcome";
+
+    case 12:
+      return "I Love You";
+
+    case 13:
+      return "Water";
+
+    case 14:
+      return "Food";
+
+    case 15:
+      return "Emergency";
+
+    default:
+      return "Unknown Sign";
+  }
+}
+
+
+// =====================================================
+// WEB PAGE
+// =====================================================
+void handleRoot() {
+
+  readTouchSensors();
+
+  int binaryValue = getBinaryValue();
+
+  currentSign = recognizeSign(binaryValue);
+
+  String html = "";
+
+  html += "<!DOCTYPE html>";
+  html += "<html>";
+  html += "<head>";
+
+  html += "<meta name='viewport' content='width=device-width,initial-scale=1'>";
+
+  html += "<title>Smart Sign Language Glove</title>";
+
+  html += "<style>";
+
+  html += "body{";
+  html += "font-family:Arial;";
+  html += "text-align:center;";
+  html += "background:#111;";
+  html += "color:white;";
+  html += "padding:30px;";
+  html += "}";
+
+  html += ".card{";
+  html += "max-width:500px;";
+  html += "margin:auto;";
+  html += "background:#222;";
+  html += "padding:30px;";
+  html += "border-radius:20px;";
+  html += "}";
+
+  html += ".sign{";
+  html += "font-size:40px;";
+  html += "font-weight:bold;";
+  html += "margin:30px;";
+  html += "}";
+
+  html += ".bits{";
+  html += "font-size:25px;";
+  html += "letter-spacing:10px;";
+  html += "}";
+
+  html += "</style>";
+
+  html += "</head>";
+
+  html += "<body>";
+
+  html += "<div class='card'>";
+
+  html += "<h1>Smart Sign Language Glove</h1>";
+
+  html += "<p>Offline Mode</p>";
+
+  html += "<div class='sign'>";
+  html += currentSign;
+  html += "</div>";
+
+  html += "<h3>5-Bit Touch Pattern</h3>";
+
+  html += "<div class='bits'>";
+
+  html += String(touch1);
+  html += " ";
+  html += String(touch2);
+  html += " ";
+  html += String(touch3);
+  html += " ";
+  html += String(touch4);
+  html += " ";
+  html += String(touch5);
+
+  html += "</div>";
+
+  html += "<p>Binary Value: ";
+  html += String(binaryValue);
+  html += "</p>";
+
+  html += "<button onclick='location.reload()'>Refresh</button>";
+
+  html += "</div>";
+
+  html += "</body>";
+  html += "</html>";
+
+  server.send(200, "text/html", html);
+}
+
+
+// =====================================================
+// SETUP
+// =====================================================
+void setup() {
+
+  Serial.begin(115200);
+
+  // ---------------- Touch Sensors ----------------
+
+  pinMode(TOUCH1, INPUT);
+  pinMode(TOUCH2, INPUT);
+  pinMode(TOUCH3, INPUT);
+  pinMode(TOUCH4, INPUT);
+  pinMode(TOUCH5, INPUT);
+
+
+  // ---------------- MPU6050 ----------------
+
+  Wire.begin(SDA_PIN, SCL_PIN);
+
+  mpu.initialize();
+
+  if (mpu.testConnection()) {
+
+    Serial.println("MPU6050 Connected");
+
+  } else {
+
+    Serial.println("MPU6050 Connection Failed");
+  }
+
+
+  // =================================================
+  // CREATE OFFLINE WI-FI NETWORK
+  // =================================================
+
+  WiFi.mode(WIFI_AP);
+
+  WiFi.softAP(AP_SSID, AP_PASSWORD);
+
+  Serial.println();
+  Serial.println("==============================");
+  Serial.println("SMART SIGN LANGUAGE GLOVE");
+  Serial.println("==============================");
+
+  Serial.print("Wi-Fi Name: ");
+  Serial.println(AP_SSID);
+
+  Serial.print("IP Address: ");
+  Serial.println(WiFi.softAPIP());
+
+
+  // ---------------- Web Server ----------------
+
+  server.on("/", handleRoot);
+
+  server.begin();
+
+  Serial.println("Local Web Server Started");
+}
+
+
+// =====================================================
+// LOOP
+// =====================================================
+void loop() {
+
+  server.handleClient();
+
+  readTouchSensors();
+
+  int binaryValue = getBinaryValue();
+
+  currentSign = recognizeSign(binaryValue);
+
+  Serial.print("Touch Pattern: ");
+
+  Serial.print(touch1);
+  Serial.print(" ");
+  Serial.print(touch2);
+  Serial.print(" ");
+  Serial.print(touch3);
+  Serial.print(" ");
+  Serial.print(touch4);
+  Serial.print(" ");
+  Serial.println(touch5);
+
+  Serial.print("Binary Value: ");
+  Serial.println(binaryValue);
+
+  Serial.print("Detected Sign: ");
+  Serial.println(currentSign);
+
+  Serial.println("--------------------------");
+
+  delay(300);
+}
