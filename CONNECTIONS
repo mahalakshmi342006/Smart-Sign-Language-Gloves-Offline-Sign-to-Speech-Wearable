@@ -1,0 +1,59 @@
+### 🔌 Connections
+
+| Component                 | Connection to ESP32-C3 | Purpose                |
+| ------------------------- | ---------------------- | ---------------------- |
+| **TTP223 Touch Sensor 1** | Digital GPIO           | Finger/touch detection |
+| **TTP223 Touch Sensor 2** | Digital GPIO           | Finger/touch detection |
+| **TTP223 Touch Sensor 3** | Digital GPIO           | Finger/touch detection |
+| **TTP223 Touch Sensor 4** | Digital GPIO           | Finger/touch detection |
+| **TTP223 Touch Sensor 5** | Digital GPIO           | Finger/touch detection |
+| **MPU6050 VCC**           | 3.3V                   | Power                  |
+| **MPU6050 GND**           | GND                    | Ground                 |
+| **MPU6050 SDA**           | ESP32-C3 I²C SDA       | Sensor data            |
+| **MPU6050 SCL**           | ESP32-C3 I²C SCL       | Sensor clock           |
+| **Power Supply**          | ESP32-C3 power input   | Powers the glove       |
+
+### 🧩 Basic Wiring Structure
+
+```text
+             ┌──────────────────────┐
+             │      ESP32-C3        │
+             │                      │
+             │  GPIO ───────────────┼── TTP223 #1
+             │  GPIO ───────────────┼── TTP223 #2
+             │  GPIO ───────────────┼── TTP223 #3
+             │  GPIO ───────────────┼── TTP223 #4
+             │  GPIO ───────────────┼── TTP223 #5
+             │                      │
+             │  I2C SDA ────────────┼── MPU6050 SDA
+             │  I2C SCL ────────────┼── MPU6050 SCL
+             │  3.3V ───────────────┼── MPU6050 VCC
+             │  GND ────────────────┼── MPU6050 GND
+             └──────────────────────┘
+```
+
+### ✋ 5-Bit Touch System
+
+The five TTP223 sensors provide a binary input:
+
+```text
+Touch 1 → Bit 1
+Touch 2 → Bit 2
+Touch 3 → Bit 3
+Touch 4 → Bit 4
+Touch 5 → Bit 5
+
+Example:
+
+1 0 1 0 1
+│ │ │ │ │
+│ │ │ │ └── Touch 5
+│ │ │ └──── Touch 4
+│ │ └────── Touch 3
+│ └──────── Touch 2
+└────────── Touch 1
+```
+
+The document confirms that the glove uses a **5-bit binary touch system**, with MPU6050 motion tracking used for intentional movement verification. 
+
+**Note:** If you give me your **actual ESP32-C3 board model/pinout**, I can make an exact **GPIO-to-TTP223 + MPU6050 connection table** for your GitHub README.
